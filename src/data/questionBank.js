@@ -35,12 +35,9 @@ export const QUESTION_BANK = {
     coding: {
       id: 'math_coding_1',
       title: 'Write a function to calculate factorial',
-      description: 'Write a JavaScript function that takes a number n and returns its factorial.',
-      example: 'factorial(5) should return 120',
-      testCases: [
-        { input: '5', expected: '120' },
-        { input: '3', expected: '6' },
-      ],
+      description: 'Write a JavaScript function named "factorial" that takes a number n and returns its factorial. For example: factorial(5) = 5 × 4 × 3 × 2 × 1 = 120',
+      example: 'factorial(5) should return 120\nfactorial(3) should return 6',
+      testCases: [],
     },
   },
   Physics: {
@@ -79,12 +76,9 @@ export const QUESTION_BANK = {
     coding: {
       id: 'physics_coding_1',
       title: 'Calculate kinetic energy',
-      description: 'Write a function to calculate kinetic energy given mass and velocity. Formula: KE = 0.5 * m * v²',
-      example: 'kineticEnergy(2, 5) should return 25',
-      testCases: [
-        { input: '2, 5', expected: '25' },
-        { input: '1, 10', expected: '50' },
-      ],
+      description: 'Write a function named "kineticEnergy" that calculates kinetic energy given mass (m) and velocity (v). Formula: KE = 0.5 × m × v²',
+      example: 'kineticEnergy(2, 5) should return 25\nkineticEnergy(1, 10) should return 50',
+      testCases: [],
     },
   },
   Chemistry: {
@@ -122,13 +116,10 @@ export const QUESTION_BANK = {
     ],
     coding: {
       id: 'chemistry_coding_1',
-      title: 'Calculate molecular weight',
-      description: 'Write a function to calculate the molecular weight of a compound given element symbols and counts.',
-      example: 'molWeight("H2O") should return ~18',
-      testCases: [
-        { input: 'H2O', expected: '18' },
-        { input: 'CO2', expected: '44' },
-      ],
+      title: 'Calculate molecular weight of water',
+      description: 'Write a function named "waterMolWeight" that returns the molecular weight of H₂O. (H=1, O=16, so H₂O = 2×1 + 16 = 18)',
+      example: 'waterMolWeight() should return 18',
+      testCases: [],
     },
   },
 };

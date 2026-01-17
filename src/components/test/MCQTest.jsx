@@ -6,22 +6,45 @@ const MCQTest = ({ questions = [], onSubmit, subject = 'Mathematics' }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(null);
+  const FEEDBACK_DELAY_MS = 1200; // delay before moving to next question
 
   const handleSelectOption = (optionIndex) => {
-    setAnswers({
+    if (showFeedback) return; // prevent multiple selections during feedback
+
+    const nextAnswers = {
       ...answers,
       [currentQuestion]: optionIndex,
-    });
+    };
+    setAnswers(nextAnswers);
+
+    const correct = questions[currentQuestion]?.correctAnswer === optionIndex;
+    setIsCorrect(correct);
+    setShowFeedback(true);
+
+    // Auto-advance after short delay except on last question
+    if (currentQuestion < questions.length - 1) {
+      setTimeout(() => {
+        setShowFeedback(false);
+        setIsCorrect(null);
+        setCurrentQuestion((q) => q + 1);
+      }, FEEDBACK_DELAY_MS);
+    }
   };
 
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
+      setShowFeedback(false);
+      setIsCorrect(null);
       setCurrentQuestion(currentQuestion + 1);
     }
   };
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
+      setShowFeedback(false);
+      setIsCorrect(null);
       setCurrentQuestion(currentQuestion - 1);
     }
   };
@@ -84,25 +107,54 @@ const MCQTest = ({ questions = [], onSubmit, subject = 'Mathematics' }) => {
             <button
               key={idx}
               onClick={() => handleSelectOption(idx)}
+              disabled={showFeedback}
               className={`w-full text-left p-4 border-2 rounded-lg transition-all ${
-                answers[currentQuestion] === idx
-                  ? 'border-blue-600 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                showFeedback
+                  ? idx === question.correctAnswer
+                    ? 'border-green-600 bg-green-50'
+                    : answers[currentQuestion] === idx
+                      ? 'border-red-600 bg-red-50'
+                      : 'border-gray-200'
+                  : answers[currentQuestion] === idx
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center">
                 <div
                   className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
-                    answers[currentQuestion] === idx ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                    showFeedback
+                      ? idx === question.correctAnswer
+                        ? 'border-green-600 bg-green-600'
+                        : answers[currentQuestion] === idx
+                          ? 'border-red-600 bg-red-600'
+                          : 'border-gray-300'
+                      : answers[currentQuestion] === idx
+                        ? 'border-blue-600 bg-blue-600'
+                        : 'border-gray-300'
                   }`}
                 >
-                  {answers[currentQuestion] === idx && <span className="text-white text-xs">✓</span>}
+                  {answers[currentQuestion] === idx && (
+                    <span className="text-white text-xs">✓</span>
+                  )}
                 </div>
                 <span className="text-gray-700">{option}</span>
               </div>
             </button>
           ))}
         </div>
+
+        {showFeedback && (
+          <div
+            className={`mt-4 p-3 rounded-lg border text-sm font-semibold ${
+              isCorrect
+                ? 'bg-green-50 text-green-700 border-green-200'
+                : 'bg-red-50 text-red-700 border-red-200'
+            }`}
+          >
+            {isCorrect ? 'Correct!' : 'Wrong answer'}
+          </div>
+        )}
       </div>
 
       <div className="flex justify-between gap-4">
@@ -114,7 +166,7 @@ const MCQTest = ({ questions = [], onSubmit, subject = 'Mathematics' }) => {
             Submit Test
           </Button>
         ) : (
-          <Button onClick={handleNext}>
+          <Button onClick={handleNext} disabled={showFeedback}>
             Next
           </Button>
         )}

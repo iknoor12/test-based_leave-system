@@ -4,12 +4,15 @@ import RoleSelect from './pages/auth/RoleSelect';
 import StudentDashboard from './pages/student/StudentDashboard';
 import ApplyLeave from './pages/student/ApplyLeave';
 import TestEnvironment from './pages/student/TestEnvironment';
+import TestResults from './pages/student/TestResults';
 import AdminDashboard from './pages/admin/AdminDashboard';
 
 function App() {
   const [userRole, setUserRole] = useState(null); // 'student' | 'admin' | null
-  const [currentPage, setCurrentPage] = useState('dashboard'); // 'dashboard' | 'applyLeave' | 'test'
+  const [currentPage, setCurrentPage] = useState('dashboard'); // 'dashboard' | 'applyLeave' | 'test' | 'results'
   const [testData, setTestData] = useState(null); // Data for test environment
+  const [testResults, setTestResults] = useState(null); // Test results data
+  const [leaveHistory, setLeaveHistory] = useState([]); // Store all leave applications
 
   const handleSelectRole = (role) => {
     setUserRole(role);
@@ -20,6 +23,8 @@ function App() {
     setUserRole(null);
     setCurrentPage('dashboard');
     setTestData(null);
+    setTestResults(null);
+    setLeaveHistory([]);
   };
 
   const handleApplyLeave = () => {
@@ -37,8 +42,43 @@ function App() {
 
   const handleTestComplete = (results) => {
     console.log('Test Results:', results);
-    // In production: send to backend
-    setCurrentPage('dashboard');
+    
+    // Calculate MCQ score
+    const mcqScore = results?.mcqResults?.score || 0;
+    const totalMcq = results?.mcqResults?.totalQuestions || 5;
+    const mcqPercentage = ((mcqScore / totalMcq) * 100).toFixed(0);
+    
+    // Get coding score
+    const codingScore = results?.codingResults?.codingScore || 0;
+    
+    // Calculate combined score (60% MCQ + 40% Coding)
+    const combinedScore = Math.round(parseInt(mcqPercentage) * 0.6 + codingScore * 0.4);
+    
+    // Approval requires 70% combined score
+    const isApproved = combinedScore >= 70;
+    
+    // Create leave application record
+    const leaveApplication = {
+      id: Date.now(),
+      reason: testData.reason,
+      startDate: testData.startDate,
+      endDate: testData.endDate,
+      subject: testData.subject,
+      mcqScore: `${mcqScore}/${totalMcq}`,
+      mcqPercentage: `${mcqPercentage}%`,
+      codingScore: `${codingScore}%`,
+      combinedScore: `${combinedScore}%`,
+      status: isApproved ? 'Approved' : 'Rejected',
+      submittedDate: new Date().toLocaleDateString(),
+      testResults: results,
+    };
+    
+    // Add to history
+    setLeaveHistory([leaveApplication, ...leaveHistory]);
+    
+    // Store test results and show results page
+    setTestResults(results);
+    setCurrentPage('results');
   };
 
   // Show role selection if no user role selected
@@ -54,7 +94,10 @@ function App() {
         {userRole === 'student' && (
           <>
             {currentPage === 'dashboard' && (
-              <StudentDashboard onApplyLeave={handleApplyLeave} />
+              <StudentDashboard 
+                onApplyLeave={handleApplyLeave}
+                leaveHistory={leaveHistory}
+              />
             )}
             {currentPage === 'applyLeave' && (
               <ApplyLeave
@@ -67,6 +110,13 @@ function App() {
                 subject={testData.subject}
                 onTestComplete={handleTestComplete}
                 onBack={handleBackToDashboard}
+              />
+            )}
+            {currentPage === 'results' && testResults && (
+              <TestResults
+                testData={testResults}
+                leaveData={testData}
+                onBackToDashboard={handleBackToDashboard}
               />
             )}
           </>
