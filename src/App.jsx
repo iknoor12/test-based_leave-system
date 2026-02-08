@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Navbar from './components/layout/Navbar';
-import RoleSelect from './pages/auth/RoleSelect';
+import AuthGateway from './pages/auth/AuthGateway';
 import StudentDashboard from './pages/student/StudentDashboard';
 import ApplyLeave from './pages/student/ApplyLeave';
 import TestEnvironment from './pages/student/TestEnvironment';
@@ -8,19 +8,28 @@ import TestResults from './pages/student/TestResults';
 import AdminDashboard from './pages/admin/AdminDashboard';
 
 function App() {
-  const [userRole, setUserRole] = useState(null); // 'student' | 'admin' | null
+  const [authUser, setAuthUser] = useState(null); // { role, name, email, token }
   const [currentPage, setCurrentPage] = useState('dashboard'); // 'dashboard' | 'applyLeave' | 'test' | 'results'
   const [testData, setTestData] = useState(null); // Data for test environment
   const [testResults, setTestResults] = useState(null); // Test results data
   const [leaveHistory, setLeaveHistory] = useState([]); // Store all leave applications
 
-  const handleSelectRole = (role) => {
-    setUserRole(role);
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('authUser');
+    if (storedAuth) {
+      setAuthUser(JSON.parse(storedAuth));
+    }
+  }, []);
+
+  const handleAuthenticate = (user) => {
+    setAuthUser(user);
+    localStorage.setItem('authUser', JSON.stringify(user));
     setCurrentPage('dashboard');
   };
 
   const handleLogout = () => {
-    setUserRole(null);
+    setAuthUser(null);
+    localStorage.removeItem('authUser');
     setCurrentPage('dashboard');
     setTestData(null);
     setTestResults(null);
@@ -82,16 +91,16 @@ function App() {
   };
 
   // Show role selection if no user role selected
-  if (!userRole) {
-    return <RoleSelect onSelectRole={handleSelectRole} />;
+  if (!authUser) {
+    return <AuthGateway onAuthenticate={handleAuthenticate} />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar userRole={userRole} onLogout={handleLogout} />
+      <Navbar userRole={authUser.role} onLogout={handleLogout} />
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {userRole === 'student' && (
+        {authUser.role === 'student' && (
           <>
             {currentPage === 'dashboard' && (
               <StudentDashboard 
@@ -122,7 +131,7 @@ function App() {
           </>
         )}
 
-        {userRole === 'admin' && currentPage === 'dashboard' && (
+        {authUser.role === 'admin' && currentPage === 'dashboard' && (
           <AdminDashboard />
         )}
       </main>
