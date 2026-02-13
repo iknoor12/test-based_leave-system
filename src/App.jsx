@@ -106,6 +106,7 @@ function App() {
               <StudentDashboard 
                 onApplyLeave={handleApplyLeave}
                 leaveHistory={leaveHistory}
+                userName={authUser?.name || authUser?.email}
               />
             )}
             {currentPage === 'applyLeave' && (
@@ -132,7 +133,7 @@ function App() {
         )}
 
         {authUser.role === 'admin' && currentPage === 'dashboard' && (
-          <AdminDashboard />
+          <AdminDashboard userName={authUser?.name || authUser?.email} />
         )}
       </main>
     </div>

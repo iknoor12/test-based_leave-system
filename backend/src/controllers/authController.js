@@ -10,24 +10,34 @@ const createToken = (user) =>
 export const register = async (req, res) => {
   try {
     const { name, email, password, role, passkey } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
+    const normalizedName = name?.trim();
+    const normalizedRole = role || 'student';
+    const normalizedPasskey = passkey?.trim();
+    const adminPasskey = process.env.ADMIN_PASSKEY?.trim();
 
-    if (!name || !email || !password) {
+    if (!normalizedName || !normalizedEmail || !password) {
       return res.status(400).json({ message: 'Missing required fields.' });
     }
 
-    if (role === 'admin') {
-      if (!passkey || passkey !== process.env.ADMIN_PASSKEY) {
+    if (normalizedRole === 'admin') {
+      if (!normalizedPasskey || normalizedPasskey !== adminPasskey) {
         return res.status(401).json({ message: 'Invalid admin passkey.' });
       }
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(409).json({ message: 'Email is already registered.' });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await User.create({ name, email, passwordHash, role });
+    const user = await User.create({
+      name: normalizedName,
+      email: normalizedEmail,
+      passwordHash,
+      role: normalizedRole,
+    });
     const token = createToken(user);
 
     res.status(201).json({
@@ -35,25 +45,32 @@ export const register = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Registration failed.' });
+    if (error?.code === 11000) {
+      return res.status(409).json({ message: 'Email is already registered.' });
+    }
+    console.error('Registration error:', error);
+    return res.status(500).json({ message: error?.message || 'Registration failed.' });
   }
 };
 
 export const login = async (req, res) => {
   try {
     const { email, password, passkey } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
+    const normalizedPasskey = passkey?.trim();
+    const adminPasskey = process.env.ADMIN_PASSKEY?.trim();
 
-    if (!email || !password) {
+    if (!normalizedEmail || !password) {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
 
     if (user.role === 'admin') {
-      if (!passkey || passkey !== process.env.ADMIN_PASSKEY) {
+      if (!normalizedPasskey || normalizedPasskey !== adminPasskey) {
         return res.status(401).json({ message: 'Invalid admin passkey.' });
       }
     }
@@ -70,6 +87,7 @@ export const login = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Login failed.' });
+    console.error('Login error:', error);
+    res.status(500).json({ message: error?.message || 'Login failed.' });
   }
 };

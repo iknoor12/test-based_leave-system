@@ -1,13 +1,13 @@
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 
-const StudentDashboard = ({ onApplyLeave, leaveHistory = [] }) => {
+const StudentDashboard = ({ onApplyLeave, leaveHistory = [], userName }) => {
   // Calculate dynamic stats based on leave history
   const approvedLeaves = leaveHistory.filter(leave => leave.status === 'Approved');
   const pendingLeaves = leaveHistory.filter(leave => leave.status === 'Pending');
   const rejectedLeaves = leaveHistory.filter(leave => leave.status === 'Rejected');
   
-  const totalLeaveDays = 20;
+  const totalLeaveDays = 40;
   const usedDays = approvedLeaves.length * 2; // Assuming 2 days per leave
   const remainingDays = totalLeaveDays - usedDays;
   
@@ -21,7 +21,10 @@ const StudentDashboard = ({ onApplyLeave, leaveHistory = [] }) => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          {userName && <p className="text-lg text-gray-600 mt-1">Welcome, {userName}</p>}
+        </div>
         <Button onClick={onApplyLeave} variant="primary">
           Apply for Leave
         </Button>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ userName }) => {
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'allRequests' | 'report'
   const [requests, setRequests] = useState([
     { id: 1, studentName: 'Aman Singh', reason: 'Medical', testScore: '85%', status: 'Pending', subject: 'Mathematics', dateApplied: '2024-01-15' },
@@ -55,6 +55,7 @@ const AdminDashboard = () => {
   };
 
   const pendingRequests = requests.filter(req => req.status === 'Pending');
+  const passedTestApplicants = requests.filter(req => req.status === 'Approved');
   const stats = [
     { title: 'Total Requests', value: requests.length.toString(), description: 'All applications' },
     { title: 'Pending Requests', value: pendingRequests.length.toString(), description: 'Awaiting approval' },
@@ -66,7 +67,10 @@ const AdminDashboard = () => {
   if (currentView === 'dashboard') {
     return (
       <div className="space-y-8">
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          {userName && <p className="text-lg text-gray-600 mt-1">Welcome, {userName}</p>}
+        </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -123,6 +127,44 @@ const AdminDashboard = () => {
                           Reject
                         </Button>
                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Passed Test Applicants */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900">Passed Test & Applied ({passedTestApplicants.length})</h2>
+          </div>
+
+          {passedTestApplicants.length === 0 ? (
+            <div className="p-6 text-center">
+              <p className="text-gray-500">No approved applicants yet</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Student Name</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Reason</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Subject</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Test Score</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Applied Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {passedTestApplicants.map((req) => (
+                    <tr key={req.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-900">{req.studentName}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{req.reason}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{req.subject}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-green-600">{req.testScore}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{req.dateApplied}</td>
                     </tr>
                   ))}
                 </tbody>
