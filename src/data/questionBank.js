@@ -122,4 +122,45 @@ export const QUESTION_BANK = {
       testCases: [],
     },
   },
+  JavaScript: {
+    mcqs: [
+      {
+        id: 1,
+        question: 'Which keyword is used to declare a constant in JavaScript?',
+        options: ['var', 'let', 'const', 'static'],
+        correctAnswer: 2,
+      },
+      {
+        id: 2,
+        question: 'What is the output of: typeof null?',
+        options: ['"null"', '"object"', '"undefined"', '"number"'],
+        correctAnswer: 1,
+      },
+      {
+        id: 3,
+        question: 'Which method is used to add an element to the end of an array?',
+        options: ['push()', 'pop()', 'shift()', 'unshift()'],
+        correctAnswer: 0,
+      },
+      {
+        id: 4,
+        question: 'What does "===" operator do in JavaScript?',
+        options: ['Assigns value', 'Compares value only', 'Compares value and type', 'Logical AND'],
+        correctAnswer: 2,
+      },
+      {
+        id: 5,
+        question: 'Which of these is NOT a JavaScript data type?',
+        options: ['string', 'boolean', 'float', 'undefined'],
+        correctAnswer: 2,
+      },
+    ],
+    coding: {
+      id: 'javascript_coding_1',
+      title: 'Reverse a string',
+      description: 'Write a function named "reverseString" that takes a string as input and returns the reversed string. For example: reverseString("hello") should return "olleh"',
+      example: 'reverseString("hello") should return "olleh"\nreverseString("world") should return "dlrow"',
+      testCases: [],
+    },
+  },
 };
