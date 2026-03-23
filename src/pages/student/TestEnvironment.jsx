@@ -91,22 +91,16 @@ const TestEnvironment = ({ subject = 'Mathematics', onTestComplete, onBack }) =>
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
+        <button
+          onClick={onBack}
+          className="text-blue-600 hover:text-blue-700 font-semibold text-lg"
+        >
+          ← Back
+        </button>
         <h1 className="text-3xl font-bold text-gray-900">{subject} Test</h1>
+        <div className="w-16"></div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="flex justify-between mb-2">
-          <span className="text-sm font-semibold text-gray-700">Test Progress</span>
-          <span className="text-sm font-semibold text-gray-700">{progress}%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-green-600 h-2 rounded-full transition-all"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-      </div>
 
       {/* Stage Indicator */}
       <div className="grid grid-cols-2 gap-4">
@@ -123,7 +117,7 @@ const TestEnvironment = ({ subject = 'Mathematics', onTestComplete, onBack }) =>
       </div>
 
       {/* Test Component */}
-      <div className="bg-white rounded-lg shadow-md p-8">
+      <div className="bg-white rounded-lg shadow-md p-2">
         {stage === 'mcq' ? (
           <MCQTest
             questions={questions}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Timer from '../common/Timer';
 import Button from '../common/Button';
 
@@ -12,6 +12,203 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
   const [codingScore, setCodingScore] = useState(0);
   const [passedTests, setPassedTests] = useState(0);
   const [totalTests, setTotalTests] = useState(0);
+  const [showCheatingWarning, setShowCheatingWarning] = useState(false);
+  const [cheatingWarningType, setCheatingWarningType] = useState('');
+  const [cheatingCount, setCheatingCount] = useState(0);
+
+  // Cheating detection - Tab switch and copy/paste prevention
+  useEffect(() => {
+    // Request fullscreen
+    const requestFullscreen = async () => {
+      try {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          await elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+          await elem.msRequestFullscreen();
+        }
+      } catch (err) {
+        console.log('Fullscreen request failed');
+      }
+    };
+
+    requestFullscreen();
+
+    // Tab visibility detection
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setShowCheatingWarning(true);
+        setCheatingWarningType('tab');
+        setCheatingCount((prev) => {
+          const newCount = prev + 1;
+          if (newCount >= 3) {
+            setSubmitted(true);
+            onSubmit?.({ 
+              code, 
+              subject,
+              isCorrect,
+              output,
+              hasError,
+              codingScore,
+              passedTests,
+              totalTests,
+            });
+          }
+          return newCount;
+        });
+
+        setTimeout(() => setShowCheatingWarning(false), 3000);
+      }
+    };
+
+    // Copy/paste prevention
+    const handleCopy = (e) => {
+      e.preventDefault();
+      setShowCheatingWarning(true);
+      setCheatingWarningType('copy');
+      setCheatingCount((prev) => {
+        const newCount = prev + 1;
+        if (newCount >= 3) {
+          setSubmitted(true);
+          onSubmit?.({ 
+            code, 
+            subject,
+            isCorrect,
+            output,
+            hasError,
+            codingScore,
+            passedTests,
+            totalTests,
+          });
+        }
+        return newCount;
+      });
+
+      setTimeout(() => setShowCheatingWarning(false), 3000);
+    };
+
+    const handlePaste = (e) => {
+      e.preventDefault();
+      setShowCheatingWarning(true);
+      setCheatingWarningType('copy');
+      setCheatingCount((prev) => {
+        const newCount = prev + 1;
+        if (newCount >= 3) {
+          setSubmitted(true);
+          onSubmit?.({ 
+            code, 
+            subject,
+            isCorrect,
+            output,
+            hasError,
+            codingScore,
+            passedTests,
+            totalTests,
+          });
+        }
+        return newCount;
+      });
+
+      setTimeout(() => setShowCheatingWarning(false), 3000);
+    };
+
+    // Right-click prevention
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+    };
+
+    // Detect keyboard shortcuts for tab switching (Ctrl+Tab, Alt+Tab, Cmd+Tab)
+    const handleKeyDown = (e) => {
+      // Ctrl+Tab or Cmd+Tab
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Tab') {
+        e.preventDefault();
+        setShowCheatingWarning(true);
+        setCheatingWarningType('tab');
+        setCheatingCount((prev) => {
+          const newCount = prev + 1;
+          if (newCount >= 3) {
+            setSubmitted(true);
+            onSubmit?.({ 
+              code, 
+              subject,
+              isCorrect,
+              output,
+              hasError,
+              codingScore,
+              passedTests,
+              totalTests,
+            });
+          }
+          return newCount;
+        });
+
+        setTimeout(() => setShowCheatingWarning(false), 3000);
+      }
+
+      // Alt+Tab (works on some browsers)
+      if (e.altKey && e.key === 'Tab') {
+        e.preventDefault();
+        setShowCheatingWarning(true);
+        setCheatingWarningType('tab');
+        setCheatingCount((prev) => {
+          const newCount = prev + 1;
+          if (newCount >= 3) {
+            setSubmitted(true);
+            onSubmit?.({ 
+              code, 
+              subject,
+              isCorrect,
+              output,
+              hasError,
+              codingScore,
+              passedTests,
+              totalTests,
+            });
+          }
+          return newCount;
+        });
+
+        setTimeout(() => setShowCheatingWarning(false), 3000);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('paste', handlePaste);
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('paste', handlePaste);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [code, subject, isCorrect, output, hasError, codingScore, passedTests, totalTests]);
+
+  // Exit fullscreen when test is completed
+  useEffect(() => {
+    if (!submitted) return;
+
+    const exitFullscreen = async () => {
+      try {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+        } else if (document.webkitFullscreenElement) {
+          await document.webkitCancelFullScreen();
+        } else if (document.msFullscreenElement) {
+          await document.msExitFullscreen();
+        }
+      } catch (err) {
+        console.log('Exit fullscreen failed:', err);
+      }
+    };
+
+    exitFullscreen();
+  }, [submitted]);
 
   const handleRunCode = () => {
     setIsExecuting(true);
@@ -281,6 +478,41 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
               💡 <strong>Instructions:</strong> Write your function and click "Run Code". You'll see output or errors, and validation against the expected answer. Submit when it's correct.
             </p>
           </div>
+
+          {/* Cheating Warning Modal */}
+          {showCheatingWarning && (
+            <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
+                <div className="text-center">
+                  <div className="text-red-600 text-5xl mb-4">⚠️</div>
+                  <h2 className="text-2xl font-bold text-red-700 mb-2">
+                    {cheatingWarningType === 'tab' ? 'Tab Switch Detected!' : 'Copy/Paste Not Allowed!'}
+                  </h2>
+                  <p className="text-gray-700 mb-4 font-semibold">
+                    {cheatingWarningType === 'tab'
+                      ? "You switched away from the coding test. This is not allowed during the test."
+                      : "Copying or pasting content is not permitted during the test."}
+                  </p>
+                  <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-6">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Warning {cheatingCount} of 3:</strong> One more violation will result in automatic test submission.
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">
+                      ✓ Stay focused on the coding test window
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      ✓ Do not switch tabs or minimize the window
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      ✓ Do not copy or paste any content
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

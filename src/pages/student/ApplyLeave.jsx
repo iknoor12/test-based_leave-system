@@ -1,17 +1,29 @@
 import { useState } from 'react';
 import Button from '../../components/common/Button';
-import { QUESTION_BANK } from '../../data/questionBank';
 
 const ApplyLeave = ({ onSubmit, onBack }) => {
   const [formData, setFormData] = useState({
     reason: '',
     startDate: '',
     endDate: '',
-    subject: 'Mathematics',
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Validate start date - prevent past dates
+    if (name === 'startDate' && value < today) {
+      return; // Don't update if date is in the past
+    }
+    
+    // Validate end date - must be after start date
+    if (name === 'endDate' && formData.startDate && value < formData.startDate) {
+      return; // Don't update if end date is before start date
+    }
+    
     setFormData({ ...formData, [name]: value });
   };
 
@@ -22,7 +34,8 @@ const ApplyLeave = ({ onSubmit, onBack }) => {
     }
   };
 
-  const subjects = Object.keys(QUESTION_BANK);
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -64,6 +77,7 @@ const ApplyLeave = ({ onSubmit, onBack }) => {
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
+                min={today}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
               />
             </div>
@@ -76,29 +90,13 @@ const ApplyLeave = ({ onSubmit, onBack }) => {
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleChange}
+                min={formData.startDate || today}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
 
-          {/* Subject Selection */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Subject for Test
-            </label>
-            <select
-              name="subject"
-              value={formData.subject}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-            >
-              {subjects.map((subject) => (
-                <option key={subject} value={subject}>
-                  {subject}
-                </option>
-              ))}
-            </select>
-          </div>
+
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
