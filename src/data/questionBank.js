@@ -32,13 +32,63 @@ export const QUESTION_BANK = {
         correctAnswer: 0,
       },
     ],
-    coding: {
-      id: 'math_coding_1',
-      title: 'Write a function to calculate factorial',
-      description: 'Write a JavaScript function named "factorial" that takes a number n and returns its factorial. For example: factorial(5) = 5 × 4 × 3 × 2 × 1 = 120',
-      example: 'factorial(5) should return 120\nfactorial(3) should return 6',
-      testCases: [],
-    },
+    coding: [
+      {
+        id: 'math_coding_1',
+        title: 'Write a function to calculate factorial',
+        description: 'Write a function named "factorial" that takes a number n and returns its factorial. For example: factorial(5) = 5 × 4 × 3 × 2 × 1 = 120',
+        example: 'factorial(5) should return 120\nfactorial(3) should return 6',
+        languages: {
+          javascript: 'function factorial(n) {\n  // Your code here\n}',
+          python: 'def factorial(n):\n    # Your code here\n    pass',
+          java: 'public static int factorial(int n) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'math_coding_2',
+        title: 'Check if a number is prime',
+        description: 'Write a function named "isPrime" that takes a number and returns true if it is prime, false otherwise.',
+        example: 'isPrime(7) should return true\nisPrime(10) should return false',
+        languages: {
+          javascript: 'function isPrime(n) {\n  // Your code here\n}',
+          python: 'def is_prime(n):\n    # Your code here\n    pass',
+          java: 'public static boolean isPrime(int n) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'math_coding_3',
+        title: 'Find the sum of digits',
+        description: 'Write a function named "sumOfDigits" that takes a number and returns the sum of its digits.',
+        example: 'sumOfDigits(123) should return 6\nsumOfDigits(999) should return 27',
+        languages: {
+          javascript: 'function sumOfDigits(n) {\n  // Your code here\n}',
+          python: 'def sum_of_digits(n):\n    # Your code here\n    pass',
+          java: 'public static int sumOfDigits(int n) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'math_coding_4',
+        title: 'Calculate Fibonacci number',
+        description: 'Write a function named "fibonacci" that returns the nth Fibonacci number.',
+        example: 'fibonacci(5) should return 5\nfibonacci(6) should return 8',
+        languages: {
+          javascript: 'function fibonacci(n) {\n  // Your code here\n}',
+          python: 'def fibonacci(n):\n    # Your code here\n    pass',
+          java: 'public static int fibonacci(int n) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'math_coding_5',
+        title: 'Find GCD of two numbers',
+        description: 'Write a function named "gcd" that finds the greatest common divisor of two numbers.',
+        example: 'gcd(12, 8) should return 4\ngcd(35, 49) should return 7',
+        languages: {
+          javascript: 'function gcd(a, b) {\n  // Your code here\n}',
+          python: 'def gcd(a, b):\n    # Your code here\n    pass',
+          java: 'public static int gcd(int a, int b) {\n    // Your code here\n}',
+        },
+      },
+    ],
   },
   Physics: {
     mcqs: [
@@ -73,13 +123,63 @@ export const QUESTION_BANK = {
         correctAnswer: 1,
       },
     ],
-    coding: {
-      id: 'physics_coding_1',
-      title: 'Calculate kinetic energy',
-      description: 'Write a function named "kineticEnergy" that calculates kinetic energy given mass (m) and velocity (v). Formula: KE = 0.5 × m × v²',
-      example: 'kineticEnergy(2, 5) should return 25\nkineticEnergy(1, 10) should return 50',
-      testCases: [],
-    },
+    coding: [
+      {
+        id: 'physics_coding_1',
+        title: 'Calculate kinetic energy',
+        description: 'Write a function named "kineticEnergy" that calculates kinetic energy given mass (m) and velocity (v). Formula: KE = 0.5 × m × v²',
+        example: 'kineticEnergy(2, 5) should return 25\nkineticEnergy(1, 10) should return 50',
+        languages: {
+          javascript: 'function kineticEnergy(m, v) {\n  // Your code here\n}',
+          python: 'def kinetic_energy(m, v):\n    # Your code here\n    pass',
+          java: 'public static double kineticEnergy(double m, double v) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'physics_coding_2',
+        title: 'Calculate force',
+        description: 'Write a function named "calculateForce" that calculates force using F = m × a.',
+        example: 'calculateForce(5, 10) should return 50',
+        languages: {
+          javascript: 'function calculateForce(m, a) {\n  // Your code here\n}',
+          python: 'def calculate_force(m, a):\n    # Your code here\n    pass',
+          java: 'public static double calculateForce(double m, double a) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'physics_coding_3',
+        title: 'Calculate gravitational potential energy',
+        description: 'Write a function named "potentialEnergy" that calculates PE = m × g × h.',
+        example: 'potentialEnergy(10, 9.8, 5) should return 490',
+        languages: {
+          javascript: 'function potentialEnergy(m, g, h) {\n  // Your code here\n}',
+          python: 'def potential_energy(m, g, h):\n    # Your code here\n    pass',
+          java: 'public static double potentialEnergy(double m, double g, double h) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'physics_coding_4',
+        title: 'Calculate velocity',
+        description: 'Write a function named "calculateVelocity" that calculates velocity using v = u + at.',
+        example: 'calculateVelocity(5, 2, 10) should return 25',
+        languages: {
+          javascript: 'function calculateVelocity(u, a, t) {\n  // Your code here\n}',
+          python: 'def calculate_velocity(u, a, t):\n    # Your code here\n    pass',
+          java: 'public static double calculateVelocity(double u, double a, double t) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'physics_coding_5',
+        title: 'Calculate distance',
+        description: 'Write a function named "calculateDistance" that calculates distance using s = ut + 0.5 × a × t².',
+        example: 'calculateDistance(10, 2, 5) should return 75',
+        languages: {
+          javascript: 'function calculateDistance(u, t, a) {\n  // Your code here\n}',
+          python: 'def calculate_distance(u, t, a):\n    # Your code here\n    pass',
+          java: 'public static double calculateDistance(double u, double t, double a) {\n    // Your code here\n}',
+        },
+      },
+    ],
   },
   Chemistry: {
     mcqs: [
@@ -114,13 +214,63 @@ export const QUESTION_BANK = {
         correctAnswer: 2,
       },
     ],
-    coding: {
-      id: 'chemistry_coding_1',
-      title: 'Calculate molecular weight of water',
-      description: 'Write a function named "waterMolWeight" that returns the molecular weight of H₂O. (H=1, O=16, so H₂O = 2×1 + 16 = 18)',
-      example: 'waterMolWeight() should return 18',
-      testCases: [],
-    },
+    coding: [
+      {
+        id: 'chemistry_coding_1',
+        title: 'Calculate molecular weight of water',
+        description: 'Write a function named "waterMolWeight" that returns the molecular weight of H₂O. (H=1, O=16, so H₂O = 2×1 + 16 = 18)',
+        example: 'waterMolWeight() should return 18',
+        languages: {
+          javascript: 'function waterMolWeight() {\n  // Your code here\n}',
+          python: 'def water_mol_weight():\n    # Your code here\n    pass',
+          java: 'public static int waterMolWeight() {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'chemistry_coding_2',
+        title: 'Calculate molarity',
+        description: 'Write a function named "calculateMolarity" that calculates molarity = moles / volume (in liters).',
+        example: 'calculateMolarity(1, 0.5) should return 2',
+        languages: {
+          javascript: 'function calculateMolarity(moles, volume) {\n  // Your code here\n}',
+          python: 'def calculate_molarity(moles, volume):\n    # Your code here\n    pass',
+          java: 'public static double calculateMolarity(double moles, double volume) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'chemistry_coding_3',
+        title: 'Convert Celsius to Kelvin',
+        description: 'Write a function named "celsiusToKelvin" that converts temperature from Celsius to Kelvin. K = C + 273.15',
+        example: 'celsiusToKelvin(25) should return 298.15',
+        languages: {
+          javascript: 'function celsiusToKelvin(celsius) {\n  // Your code here\n}',
+          python: 'def celsius_to_kelvin(celsius):\n    # Your code here\n    pass',
+          java: 'public static double celsiusToKelvin(double celsius) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'chemistry_coding_4',
+        title: 'Calculate percent composition',
+        description: 'Write a function named "percentComposition" that calculates percent composition = (mass of element / total mass) × 100.',
+        example: 'percentComposition(1, 18) should return 5.56',
+        languages: {
+          javascript: 'function percentComposition(elementMass, totalMass) {\n  // Your code here\n}',
+          python: 'def percent_composition(element_mass, total_mass):\n    # Your code here\n    pass',
+          java: 'public static double percentComposition(double elementMass, double totalMass) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'chemistry_coding_5',
+        title: 'Calculate pH from hydrogen ion concentration',
+        description: 'Write a function named "calculatePH" that calculates pH = -log10([H+]).',
+        example: 'calculatePH(0.001) should return 3',
+        languages: {
+          javascript: 'function calculatePH(concentration) {\n  // Your code here\n}',
+          python: 'def calculate_ph(concentration):\n    # Your code here\n    pass',
+          java: 'public static double calculatePH(double concentration) {\n    // Your code here\n}',
+        },
+      },
+    ],
   },
   JavaScript: {
     mcqs: [
@@ -155,12 +305,62 @@ export const QUESTION_BANK = {
         correctAnswer: 2,
       },
     ],
-    coding: {
-      id: 'javascript_coding_1',
-      title: 'Reverse a string',
-      description: 'Write a function named "reverseString" that takes a string as input and returns the reversed string. For example: reverseString("hello") should return "olleh"',
-      example: 'reverseString("hello") should return "olleh"\nreverseString("world") should return "dlrow"',
-      testCases: [],
-    },
+    coding: [
+      {
+        id: 'javascript_coding_1',
+        title: 'Reverse a string',
+        description: 'Write a function named "reverseString" that takes a string as input and returns the reversed string. For example: reverseString("hello") should return "olleh"',
+        example: 'reverseString("hello") should return "olleh"\nreverseString("world") should return "dlrow"',
+        languages: {
+          javascript: 'function reverseString(str) {\n  // Your code here\n}',
+          python: 'def reverse_string(s):\n    # Your code here\n    pass',
+          java: 'public static String reverseString(String str) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'javascript_coding_2',
+        title: 'Check if string is palindrome',
+        description: 'Write a function named "isPalindrome" that checks if a string is a palindrome.',
+        example: 'isPalindrome("racecar") should return true\nisPalindrome("hello") should return false',
+        languages: {
+          javascript: 'function isPalindrome(str) {\n  // Your code here\n}',
+          python: 'def is_palindrome(s):\n    # Your code here\n    pass',
+          java: 'public static boolean isPalindrome(String str) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'javascript_coding_3',
+        title: 'Count vowels in string',
+        description: 'Write a function named "countVowels" that counts the number of vowels in a string.',
+        example: 'countVowels("hello") should return 2\ncountVowels("javascript") should return 3',
+        languages: {
+          javascript: 'function countVowels(str) {\n  // Your code here\n}',
+          python: 'def count_vowels(s):\n    # Your code here\n    pass',
+          java: 'public static int countVowels(String str) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'javascript_coding_4',
+        title: 'Remove duplicates from array',
+        description: 'Write a function named "removeDuplicates" that removes duplicate elements from an array.',
+        example: 'removeDuplicates([1,2,2,3,3,3]) should return [1,2,3]',
+        languages: {
+          javascript: 'function removeDuplicates(arr) {\n  // Your code here\n}',
+          python: 'def remove_duplicates(arr):\n    # Your code here\n    pass',
+          java: 'public static int[] removeDuplicates(int[] arr) {\n    // Your code here\n}',
+        },
+      },
+      {
+        id: 'javascript_coding_5',
+        title: 'Find second largest number',
+        description: 'Write a function named "secondLargest" that finds the second largest number in an array.',
+        example: 'secondLargest([1,5,3,9,2]) should return 5',
+        languages: {
+          javascript: 'function secondLargest(arr) {\n  // Your code here\n}',
+          python: 'def second_largest(arr):\n    # Your code here\n    pass',
+          java: 'public static int secondLargest(int[] arr) {\n    // Your code here\n}',
+        },
+      },
+    ],
   },
 };

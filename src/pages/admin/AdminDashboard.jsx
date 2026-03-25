@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import { getPendingApprovals, approveTestResult, rejectTestResult } from '../../services/authApi';
 
 const AdminDashboard = ({ userName }) => {
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'allRequests' | 'report'
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'allRequests' | 'testApprovals' | 'report'
+  const [testApprovals, setTestApprovals] = useState([]);
+  const [loadingApprovals, setLoadingApprovals] = useState(false);
   const [requests, setRequests] = useState([
     { id: 1, studentName: 'Aman Singh', reason: 'Medical', testScore: '85%', status: 'Pending', subject: 'Mathematics', dateApplied: '2024-01-15' },
     { id: 2, studentName: 'Priya Sharma', reason: 'Family', testScore: '92%', status: 'Pending', subject: 'Physics', dateApplied: '2024-01-16' },
@@ -13,6 +16,24 @@ const AdminDashboard = ({ userName }) => {
   ]);
   const [generatedReport, setGeneratedReport] = useState(null);
   const [reportDetails, setReportDetails] = useState(null);
+
+  // Fetch pending test approvals
+  useEffect(() => {
+    const fetchApprovals = async () => {
+      try {
+        setLoadingApprovals(true);
+        const response = await getPendingApprovals();
+        setTestApprovals(response.data || []);
+      } catch (error) {
+        console.error('Error fetching test approvals:', error);
+        setTestApprovals([]);
+      } finally {
+        setLoadingApprovals(false);
+      }
+    };
+
+    fetchApprovals();
+  }, []);
 
   const handleApprove = (id) => {
     setRequests(requests.map(req => 
@@ -24,6 +45,40 @@ const AdminDashboard = ({ userName }) => {
     setRequests(requests.map(req => 
       req.id === id ? { ...req, status: 'Rejected' } : req
     ));
+  };
+
+  const handleApproveTest = async (resultId) => {
+    try {
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      await approveTestResult({
+        resultId,
+        adminId: currentUser._id,
+      });
+      // Refresh the approvals list
+      const response = await getPendingApprovals();
+      setTestApprovals(response.data || []);
+    } catch (error) {
+      console.error('Error approving test:', error);
+      alert('Failed to approve test');
+    }
+  };
+
+  const handleRejectTest = async (resultId) => {
+    try {
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const notes = prompt('Enter rejection reason (optional):');
+      await rejectTestResult({
+        resultId,
+        adminId: currentUser._id,
+        notes: notes || '',
+      });
+      // Refresh the approvals list
+      const response = await getPendingApprovals();
+      setTestApprovals(response.data || []);
+    } catch (error) {
+      console.error('Error rejecting test:', error);
+      alert('Failed to reject test');
+    }
   };
 
   const handleChangeStatus = (id, newStatus) => {
@@ -82,6 +137,70 @@ const AdminDashboard = ({ userName }) => {
               description={stat.description}
             />
           ))}
+        </div>
+
+        {/* Test Approvals Section */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-900">Pending Test Approvals ({testApprovals.length})</h2>
+            {testApprovals.length > 0 && (
+              <Button 
+                onClick={() => setCurrentView('testApprovals')}
+                variant="primary" 
+                className="text-xs px-3 py-1"
+              >
+                View All
+              </Button>
+            )}
+          </div>
+
+          {loadingApprovals ? (
+            <div className="p-6 text-center">
+              <p className="text-gray-500">Loading test approvals...</p>
+            </div>
+          ) : testApprovals.length === 0 ? (
+            <div className="p-6 text-center">
+              <p className="text-gray-500">No pending test approvals at this moment</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Student</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Subject</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Overall Score</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {testApprovals.slice(0, 5).map((approval) => (
+                    <tr key={approval._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-900">{approval.userId?.name || 'Unknown'}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{approval.subject}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-blue-600">{approval.overallScore}%</td>
+                      <td className="px-6 py-4 text-sm space-x-2 flex">
+                        <Button 
+                          onClick={() => handleApproveTest(approval._id)}
+                          variant="success" 
+                          className="px-3 py-1 text-xs"
+                        >
+                          Approve
+                        </Button>
+                        <Button 
+                          onClick={() => handleRejectTest(approval._id)}
+                          variant="danger" 
+                          className="px-3 py-1 text-xs"
+                        >
+                          Reject
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Pending Requests Table */}
@@ -310,6 +429,85 @@ const AdminDashboard = ({ userName }) => {
             </table>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Test Approvals View
+  if (currentView === 'testApprovals') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900">Pending Test Approvals</h1>
+          <Button 
+            onClick={() => setCurrentView('dashboard')}
+            variant="secondary"
+          >
+            Back to Dashboard
+          </Button>
+        </div>
+
+        {loadingApprovals ? (
+          <div className="flex items-center justify-center min-h-screen">
+            <p className="text-gray-600">Loading test approvals...</p>
+          </div>
+        ) : testApprovals.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <p className="text-gray-600 text-lg">No pending test approvals</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Student Name</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Email</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Subject</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">MCQ Score</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Coding Score</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Overall Score</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Submitted</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {testApprovals.map((approval) => (
+                    <tr key={approval._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-900">{approval.userId?.name || 'Unknown'}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{approval.userId?.email || 'N/A'}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{approval.subject}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-green-600">
+                        {approval.mcqResults?.score}/{approval.mcqResults?.totalQuestions} ({approval.mcqResults?.percentage}%)
+                      </td>
+                      <td className="px-6 py-4 text-sm font-semibold text-green-600">{approval.codingResults?.codingScore || 0}%</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-blue-600">{approval.overallScore}%</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {new Date(approval.submittedAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-sm space-x-2 flex">
+                        <Button 
+                          onClick={() => handleApproveTest(approval._id)}
+                          variant="success" 
+                          className="px-3 py-1 text-xs"
+                        >
+                          Approve
+                        </Button>
+                        <Button 
+                          onClick={() => handleRejectTest(approval._id)}
+                          variant="danger" 
+                          className="px-3 py-1 text-xs"
+                        >
+                          Reject
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

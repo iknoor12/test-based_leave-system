@@ -31,3 +31,44 @@ export const loginUser = async (payload) => {
 export const registerUser = async (payload) => {
   return await request('/api/auth/register', payload);
 };
+
+// Test Results API
+export const submitTestResult = async (payload) => {
+  return await request('/api/test/submit', payload);
+};
+
+export const getTestResults = async (userId) => {
+  const response = await fetch(`${API_BASE}/api/test/user-results?userId=${userId}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data?.message || 'Failed to fetch test results');
+  }
+
+  return data.data || [];
+};
+
+export const getPendingApprovals = async () => {
+  const response = await fetch(`${API_BASE}/api/test/pending-approvals`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data?.message || 'Failed to fetch pending approvals');
+  }
+
+  return data;
+};
+
+export const approveTestResult = async (payload) => {
+  return await request('/api/test/approve', payload);
+};
+
+export const rejectTestResult = async (payload) => {
+  return await request('/api/test/reject', payload);
+};

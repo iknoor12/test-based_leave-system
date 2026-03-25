@@ -2,23 +2,42 @@ import { useState, useEffect } from 'react';
 import Timer from '../common/Timer';
 import Button from '../common/Button';
 
-const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
-  const [code, setCode] = useState('');
+const CodingTest = ({ problems = [], onSubmit, subject = 'Mathematics', isSubmitting = false }) => {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedLanguage, setSelectedLanguage] = useState('javascript');
+  const [solutions, setSolutions] = useState({}); // Store solutions for each question
+  const [currentCode, setCurrentCode] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [output, setOutput] = useState('');
   const [isExecuting, setIsExecuting] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [codingScore, setCodingScore] = useState(0);
-  const [passedTests, setPassedTests] = useState(0);
-  const [totalTests, setTotalTests] = useState(0);
+  const [codingScores, setCodingScores] = useState({}); // Score for each question
   const [showCheatingWarning, setShowCheatingWarning] = useState(false);
   const [cheatingWarningType, setCheatingWarningType] = useState('');
   const [cheatingCount, setCheatingCount] = useState(0);
 
-  // Cheating detection - Tab switch and copy/paste prevention
+  const currentProblem = problems[currentQuestionIndex];
+
+  // Initialize code when question or language changes
   useEffect(() => {
-    // Request fullscreen
+    const questionId = currentProblem?.id;
+    if (questionId && solutions[questionId] && solutions[questionId][selectedLanguage]) {
+      setCurrentCode(solutions[questionId][selectedLanguage]);
+    } else if (currentProblem?.languages?.[selectedLanguage]) {
+      setCurrentCode(currentProblem.languages[selectedLanguage]);
+    } else {
+      setCurrentCode('');
+    }
+    setOutput('');
+    setIsCorrect(false);
+    setHasError(false);
+  }, [currentQuestionIndex, selectedLanguage, problems, solutions]);
+
+  // Cheating detection
+  useEffect(() => {
+    if (submitted) return;
+
     const requestFullscreen = async () => {
       try {
         const elem = document.documentElement;
@@ -36,7 +55,6 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
 
     requestFullscreen();
 
-    // Tab visibility detection
     const handleVisibilityChange = () => {
       if (document.hidden) {
         setShowCheatingWarning(true);
@@ -44,26 +62,14 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
         setCheatingCount((prev) => {
           const newCount = prev + 1;
           if (newCount >= 3) {
-            setSubmitted(true);
-            onSubmit?.({ 
-              code, 
-              subject,
-              isCorrect,
-              output,
-              hasError,
-              codingScore,
-              passedTests,
-              totalTests,
-            });
+            handleFinalSubmit();
           }
           return newCount;
         });
-
         setTimeout(() => setShowCheatingWarning(false), 3000);
       }
     };
 
-    // Copy/paste prevention
     const handleCopy = (e) => {
       e.preventDefault();
       setShowCheatingWarning(true);
@@ -71,21 +77,10 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
       setCheatingCount((prev) => {
         const newCount = prev + 1;
         if (newCount >= 3) {
-          setSubmitted(true);
-          onSubmit?.({ 
-            code, 
-            subject,
-            isCorrect,
-            output,
-            hasError,
-            codingScore,
-            passedTests,
-            totalTests,
-          });
+          handleFinalSubmit();
         }
         return newCount;
       });
-
       setTimeout(() => setShowCheatingWarning(false), 3000);
     };
 
@@ -96,80 +91,29 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
       setCheatingCount((prev) => {
         const newCount = prev + 1;
         if (newCount >= 3) {
-          setSubmitted(true);
-          onSubmit?.({ 
-            code, 
-            subject,
-            isCorrect,
-            output,
-            hasError,
-            codingScore,
-            passedTests,
-            totalTests,
-          });
+          handleFinalSubmit();
         }
         return newCount;
       });
-
       setTimeout(() => setShowCheatingWarning(false), 3000);
     };
 
-    // Right-click prevention
     const handleContextMenu = (e) => {
       e.preventDefault();
     };
 
-    // Detect keyboard shortcuts for tab switching (Ctrl+Tab, Alt+Tab, Cmd+Tab)
     const handleKeyDown = (e) => {
-      // Ctrl+Tab or Cmd+Tab
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Tab') {
+      if (e.key === 'Tab' && (e.altKey || e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         setShowCheatingWarning(true);
         setCheatingWarningType('tab');
         setCheatingCount((prev) => {
           const newCount = prev + 1;
           if (newCount >= 3) {
-            setSubmitted(true);
-            onSubmit?.({ 
-              code, 
-              subject,
-              isCorrect,
-              output,
-              hasError,
-              codingScore,
-              passedTests,
-              totalTests,
-            });
+            handleFinalSubmit();
           }
           return newCount;
         });
-
-        setTimeout(() => setShowCheatingWarning(false), 3000);
-      }
-
-      // Alt+Tab (works on some browsers)
-      if (e.altKey && e.key === 'Tab') {
-        e.preventDefault();
-        setShowCheatingWarning(true);
-        setCheatingWarningType('tab');
-        setCheatingCount((prev) => {
-          const newCount = prev + 1;
-          if (newCount >= 3) {
-            setSubmitted(true);
-            onSubmit?.({ 
-              code, 
-              subject,
-              isCorrect,
-              output,
-              hasError,
-              codingScore,
-              passedTests,
-              totalTests,
-            });
-          }
-          return newCount;
-        });
-
         setTimeout(() => setShowCheatingWarning(false), 3000);
       }
     };
@@ -187,7 +131,7 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [code, subject, isCorrect, output, hasError, codingScore, passedTests, totalTests]);
+  }, [submitted]);
 
   // Exit fullscreen when test is completed
   useEffect(() => {
@@ -210,6 +154,18 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
     exitFullscreen();
   }, [submitted]);
 
+  const saveSolution = () => {
+    if (!currentProblem) return;
+    const questionId = currentProblem.id;
+    setSolutions((prev) => ({
+      ...prev,
+      [questionId]: {
+        ...(prev[questionId] || {}),
+        [selectedLanguage]: currentCode,
+      },
+    }));
+  };
+
   const handleRunCode = () => {
     setIsExecuting(true);
     setOutput('');
@@ -217,7 +173,6 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
     setIsCorrect(false);
     
     try {
-      // Capture console.log output
       let consoleOutput = [];
       const originalLog = console.log;
       const originalError = console.error;
@@ -235,106 +190,127 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
       };
 
       try {
-        // Build validation snippet based on problem id
         const buildValidation = (pid) => {
-          switch (pid) {
-            case 'math_coding_1':
-              return `
-                let __tests = [];
-                try {
-                  const r1 = factorial(5);
-                  const r2 = factorial(3);
-                  __tests.push({ name: 'factorial(5)', expected: 120, actual: r1, passed: r1 === 120 });
-                  __tests.push({ name: 'factorial(3)', expected: 6, actual: r2, passed: r2 === 6 });
-                } catch (e) {
-                  return { __error: e };
-                }
-                const __passed = __tests.every(t => t.passed);
-                return { __passed, __tests };
-              `;
-            case 'physics_coding_1':
-              return `
-                let __tests = [];
-                try {
-                  const r1 = kineticEnergy(2, 5);
-                  const r2 = kineticEnergy(1, 10);
-                  __tests.push({ name: 'kineticEnergy(2,5)', expected: 25, actual: r1, passed: r1 === 25 });
-                  __tests.push({ name: 'kineticEnergy(1,10)', expected: 50, actual: r2, passed: r2 === 50 });
-                } catch (e) {
-                  return { __error: e };
-                }
-                const __passed = __tests.every(t => t.passed);
-                return { __passed, __tests };
-              `;
-            case 'chemistry_coding_1':
-              return `
-                let __tests = [];
-                try {
-                  const r1 = waterMolWeight();
-                  __tests.push({ name: 'waterMolWeight()', expected: 18, actual: r1, passed: r1 === 18 });
-                } catch (e) {
-                  return { __error: e };
-                }
-                const __passed = __tests.every(t => t.passed);
-                return { __passed, __tests };
-              `;
-            default:
-              return `return { __passed: true, __tests: [] };`;
-          }
+          if (!pid) return 'return { __passed: true, __tests: [] };';
+          const validations = {
+            'math_coding_1': `
+              let __tests = [];
+              try {
+                const r1 = factorial(5);
+                const r2 = factorial(3);
+                __tests.push({ name: 'factorial(5)', expected: 120, actual: r1, passed: r1 === 120 });
+                __tests.push({ name: 'factorial(3)', expected: 6, actual: r2, passed: r2 === 6 });
+              } catch (e) {
+                return { __error: e };
+              }
+              const __passed = __tests.every(t => t.passed);
+              return { __passed, __tests };
+            `,
+            'math_coding_2': `
+              let __tests = [];
+              try {
+                const r1 = isPrime(7);
+                const r2 = isPrime(10);
+                __tests.push({ name: 'isPrime(7)', expected: true, actual: r1, passed: r1 === true });
+                __tests.push({ name: 'isPrime(10)', expected: false, actual: r2, passed: r2 === false });
+              } catch (e) {
+                return { __error: e };
+              }
+              const __passed = __tests.every(t => t.passed);
+              return { __passed, __tests };
+            `,
+            'math_coding_3': `
+              let __tests = [];
+              try {
+                const r1 = sumOfDigits(123);
+                const r2 = sumOfDigits(999);
+                __tests.push({ name: 'sumOfDigits(123)', expected: 6, actual: r1, passed: r1 === 6 });
+                __tests.push({ name: 'sumOfDigits(999)', expected: 27, actual: r2, passed: r2 === 27 });
+              } catch (e) {
+                return { __error: e };
+              }
+              const __passed = __tests.every(t => t.passed);
+              return { __passed, __tests };
+            `,
+            'physics_coding_1': `
+              let __tests = [];
+              try {
+                const r1 = kineticEnergy(2, 5);
+                const r2 = kineticEnergy(1, 10);
+                __tests.push({ name: 'kineticEnergy(2,5)', expected: 25, actual: r1, passed: r1 === 25 });
+                __tests.push({ name: 'kineticEnergy(1,10)', expected: 50, actual: r2, passed: r2 === 50 });
+              } catch (e) {
+                return { __error: e };
+              }
+              const __passed = __tests.every(t => t.passed);
+              return { __passed, __tests };
+            `,
+            'chemistry_coding_1': `
+              let __tests = [];
+              try {
+                const r1 = waterMolWeight();
+                __tests.push({ name: 'waterMolWeight()', expected: 18, actual: r1, passed: r1 === 18 });
+              } catch (e) {
+                return { __error: e };
+              }
+              const __passed = __tests.every(t => t.passed);
+              return { __passed, __tests };
+            `,
+            'javascript_coding_1': `
+              let __tests = [];
+              try {
+                const r1 = reverseString('hello');
+                const r2 = reverseString('world');
+                __tests.push({ name: 'reverseString("hello")', expected: 'olleh', actual: r1, passed: r1 === 'olleh' });
+                __tests.push({ name: 'reverseString("world")', expected: 'dlrow', actual: r2, passed: r2 === 'dlrow' });
+              } catch (e) {
+                return { __error: e };
+              }
+              const __passed = __tests.every(t => t.passed);
+              return { __passed, __tests };
+            `,
+          };
+          return validations[pid] || 'return { __passed: true, __tests: [] };';
         };
 
-        // Execute the user's code and run validation in the same scope
-        const wrappedCode = `
-          (function() {
-            ${code}
-            ${buildValidation(problem.id)}
-          })();
-        `;
-        
-        const validation = eval(wrappedCode);
-        
-        // Restore console methods
+        const fullCode = currentCode + '\n\n' + buildValidation(currentProblem?.id);
+        const result = new Function(fullCode)();
+
         console.log = originalLog;
         console.error = originalError;
-        
-        // Build output message
+
         let outputMessage = '';
-        
-        if (consoleOutput.length > 0) {
-          outputMessage += '=== Console Output ===\n' + consoleOutput.join('\n') + '\n\n';
-        }
-        
-        if (validation && validation.__error) {
-          const execError = validation.__error;
-          setOutput(`❌ Runtime Error:\n\nError: ${execError.name}\nMessage: ${execError.message}\n\nStack Trace:\n${execError.stack || 'No stack trace available'}`);
+        if (result.__error) {
+          setOutput(`❌ Error: ${result.__error.message}`);
           setHasError(true);
           setIsCorrect(false);
-          return;
-        }
-
-        if (validation && validation.__tests && validation.__tests.length > 0) {
-          const tests = validation.__tests;
-          const passedCount = tests.filter(t => t.passed).length;
-          const totalCount = tests.length;
-          const passedAll = passedCount === totalCount;
+          setCodingScores((prev) => ({
+            ...prev,
+            [currentProblem?.id]: 0,
+          }));
+        } else if (result.__tests && result.__tests.length > 0) {
+          const passedAll = result.__tests.every((t) => t.passed);
+          const passedCount = result.__tests.filter((t) => t.passed).length;
+          const score = Math.round((passedCount / result.__tests.length) * 100);
+          
           setIsCorrect(passedAll);
-          setPassedTests(passedCount);
-          setTotalTests(totalCount);
-          setCodingScore(Math.round((passedCount / totalCount) * 100));
-          const details = tests.map(t => 
-            `${t.name}: ${t.passed ? '✓ PASSED' : '✗ FAILED'} (expected ${t.expected}, got ${t.actual})`
+          setCodingScores((prev) => ({
+            ...prev,
+            [currentProblem?.id]: score,
+          }));
+
+          const details = result.__tests.map((t) => 
+            `${t.passed ? '✓' : '✗'} ${t.name}: expected ${t.expected}, got ${t.actual}`
           ).join('\n');
           outputMessage += (passedAll ? '✓ Correct solution!\n' : '✗ Incorrect solution.\n') + '\n' + details;
           setHasError(!passedAll);
-        }
-
-        if (validation && (!validation.__tests || validation.__tests.length === 0)) {
-          // No explicit tests available; use validation.__passed to set score
-          const passed = !!validation.__passed;
+        } else {
+          const passed = !!result.__passed;
           setIsCorrect(passed);
-          setCodingScore(passed ? 100 : 0);
-          setPassedTests(passed ? 1 : 0);
-          setTotalTests(1);
+          setCodingScores((prev) => ({
+            ...prev,
+            [currentProblem?.id]: passed ? 100 : 0,
+          }));
           setHasError(!passed);
           outputMessage += passed ? '✓ Correct solution!' : '✗ Incorrect solution.';
         }
@@ -349,13 +325,17 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
         console.log = originalLog;
         console.error = originalError;
         
-        setOutput(`❌ Runtime Error:\n\nError: ${execError.name}\nMessage: ${execError.message}\n\nStack Trace:\n${execError.stack || 'No stack trace available'}`);
+        setOutput(`❌ Runtime Error:\n\nError: ${execError.name}\nMessage: ${execError.message}`);
         setHasError(true);
         setIsCorrect(false);
+        setCodingScores((prev) => ({
+          ...prev,
+          [currentProblem.id]: 0,
+        }));
       }
       
     } catch (error) {
-      setOutput(`❌ Execution Error:\n\nError: ${error.name}\nMessage: ${error.message}\n\n${error.stack || ''}`);
+      setOutput(`❌ Execution Error:\n\nError: ${error.name}\nMessage: ${error.message}`);
       setHasError(true);
       setIsCorrect(false);
     } finally {
@@ -363,29 +343,53 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
     }
   };
 
-  const handleSubmit = () => {
-    // Submit current execution result info
+  const handleNextQuestion = () => {
+    saveSolution();
+    if (currentQuestionIndex < problems.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    saveSolution();
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const handleFinalSubmit = () => {
+    saveSolution();
     setSubmitted(true);
-    onSubmit?.({ 
-      code, 
+    
+    // Calculate overall score
+    const totalScore = Object.values(codingScores).reduce((sum, score) => sum + score, 0);
+    const averageScore = problems.length > 0 ? Math.round(totalScore / problems.length) : 0;
+
+    onSubmit?.({
+      code: solutions,
       subject,
-      isCorrect,
-      output,
-      hasError,
-      codingScore,
-      passedTests,
-      totalTests,
+      isCorrect: averageScore >= 80,
+      codingScore: averageScore,
+      totalQuestions: problems.length,
     });
   };
 
   const handleTimeUp = () => {
-    handleSubmit();
+    handleFinalSubmit();
   };
 
-  if (!problem || !problem.id) {
+  if (!problems || problems.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-600">No problem available</p>
+        <p className="text-gray-600">No coding problems available</p>
+      </div>
+    );
+  }
+
+  if (!currentProblem) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600">Loading question...</p>
       </div>
     );
   }
@@ -394,7 +398,7 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
     return (
       <div className="bg-white rounded-lg shadow-md p-8 text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Submission Received</h2>
-        <p className="text-gray-600 mb-4">Your code has been submitted for evaluation.</p>
+        <p className="text-gray-600 mb-4">Your coding solutions have been submitted for evaluation.</p>
       </div>
     );
   }
@@ -406,48 +410,79 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
         <Timer duration={600} onTimeUp={handleTimeUp} />
       </div>
 
+      {/* Question Indicator */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-2">
+          <p className="font-semibold text-blue-900">Question {currentQuestionIndex + 1} of {problems.length}</p>
+          <span className="text-sm text-blue-700">Progress: {Math.round(((currentQuestionIndex + 1) / problems.length) * 100)}%</span>
+        </div>
+        <div className="w-full bg-blue-200 rounded-full h-2">
+          <div 
+            className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+            style={{ width: `${((currentQuestionIndex + 1) / problems.length) * 100}%` }}
+          ></div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Problem Section */}
         <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">{problem.title}</h3>
-          <p className="text-gray-700">{problem.description}</p>
+          <h3 className="text-lg font-semibold text-gray-900">{currentProblem.title}</h3>
+          <p className="text-gray-700">{currentProblem.description}</p>
           
-          {problem.example && (
+          {currentProblem.example && (
             <div className="bg-gray-100 p-3 rounded-lg">
-              <p className="text-sm font-mono text-gray-800">{problem.example}</p>
+              <p className="text-sm font-mono text-gray-800 whitespace-pre-wrap">{currentProblem.example}</p>
             </div>
           )}
-
-          {/* Test cases removed as per requirement */}
         </div>
 
         {/* Code Editor Section */}
         <div className="space-y-4">
+          {/* Language Selector */}
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <label className="block text-sm font-semibold text-gray-900 mb-3">Select Programming Language</label>
+            <div className="flex gap-2">
+              {['javascript', 'python', 'java'].map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setSelectedLanguage(lang)}
+                  className={`px-4 py-2 rounded-lg font-semibold transition ${
+                    selectedLanguage === lang
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                  }`}
+                >
+                  {lang.charAt(0).toUpperCase() + lang.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Code Editor */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="bg-gray-900 text-white p-3 font-semibold">Code Editor</div>
+            <div className="bg-gray-900 text-white p-3 font-semibold">Code Editor ({selectedLanguage})</div>
             <textarea
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
+              value={currentCode}
+              onChange={(e) => setCurrentCode(e.target.value)}
               placeholder="// Write your solution here..."
               className="w-full h-64 p-4 font-mono text-sm border-t border-gray-200 focus:outline-none"
             />
           </div>
 
           {output && (
-            <div className={`rounded-lg p-4 max-h-64 overflow-y-auto border-2 ${
+            <div className={`rounded-lg p-4 max-h-48 overflow-y-auto border-2 ${
               hasError
                 ? 'bg-red-50 border-red-300' 
                 : 'bg-green-50 border-green-300'
             }`}>
-              <div className="flex items-center justify-between mb-2">
-                <p className={`text-xs font-semibold ${
-                  hasError
-                    ? 'text-red-700' 
-                    : 'text-green-700'
-                }`}>
-                  {hasError ? '⚠️ Output (Error)' : (isCorrect ? '✓ Output (Correct)' : '⚠️ Output (Incorrect)')}
-                </p>
-              </div>
+              <p className={`text-xs font-semibold mb-2 ${
+                hasError
+                  ? 'text-red-700' 
+                  : 'text-green-700'
+              }`}>
+                {hasError ? '⚠️ Output (Error)' : (isCorrect ? '✓ Output (Correct)' : '⚠️ Output (Incorrect)')}
+              </p>
               <pre className={`text-sm font-mono whitespace-pre-wrap ${
                 hasError
                   ? 'text-red-800' 
@@ -460,22 +495,42 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
             <Button 
               onClick={handleRunCode} 
               variant="primary"
-              disabled={isExecuting || !code.trim()}
+              disabled={isExecuting || !currentCode.trim() || isSubmitting}
             >
               {isExecuting ? 'Running...' : 'Run Code'}
             </Button>
-            <Button 
-              onClick={handleSubmit} 
-              variant="success"
-              disabled={!code.trim()}
-            >
-              Submit Solution
-            </Button>
           </div>
-          
+
+          {/* Navigation Buttons */}
+          <div className="flex gap-4">
+            <Button 
+              onClick={handlePreviousQuestion}
+              variant="secondary"
+              disabled={currentQuestionIndex === 0}
+            >
+              ← Previous
+            </Button>
+            {currentQuestionIndex === problems.length - 1 ? (
+              <Button 
+                onClick={handleFinalSubmit}
+                variant="success"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Submitting...' : '✓ Submit All Answers'}
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleNextQuestion}
+                variant="secondary"
+              >
+                Next →
+              </Button>
+            )}
+          </div>
+
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs text-blue-800">
-              💡 <strong>Instructions:</strong> Write your function and click "Run Code". You'll see output or errors, and validation against the expected answer. Submit when it's correct.
+              💡 You can write and test code for each question. Your solutions are auto-saved when you navigate between questions.
             </p>
           </div>
 
@@ -490,30 +545,18 @@ const CodingTest = ({ problem = {}, onSubmit, subject = 'Mathematics' }) => {
                   </h2>
                   <p className="text-gray-700 mb-4 font-semibold">
                     {cheatingWarningType === 'tab'
-                      ? "You switched away from the coding test. This is not allowed during the test."
-                      : "Copying or pasting content is not permitted during the test."}
+                      ? "You switched away from the coding test."
+                      : "Copying or pasting is not permitted."}
                   </p>
                   <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-6">
                     <p className="text-sm text-yellow-800">
-                      <strong>Warning {cheatingCount} of 3:</strong> One more violation will result in automatic test submission.
-                    </p>
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-sm text-gray-600">
-                      ✓ Stay focused on the coding test window
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      ✓ Do not switch tabs or minimize the window
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      ✓ Do not copy or paste any content
+                      <strong>Warning {cheatingCount} of 3:</strong> One more violation will auto-submit.
                     </p>
                   </div>
                 </div>
               </div>
             </div>
           )}
-
         </div>
       </div>
     </div>

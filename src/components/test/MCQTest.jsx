@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import Button from '../common/Button';
 
-const MCQTest = () => {
+const MCQTest = ({ onSubmit, subject, questions: externalQuestions }) => {
   // State Management
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState(externalQuestions || []);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [score, setScore] = useState(0);
@@ -12,10 +12,11 @@ const MCQTest = () => {
   const [error, setError] = useState(null);
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(120);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(null);
-  const [selectedSubject, setSelectedSubject] = useState(null);
+  // If external questions provided, use the subject directly, otherwise allow selection
+  const [selectedSubject, setSelectedSubject] = useState(externalQuestions ? subject : null);
   const [showCheatingWarning, setShowCheatingWarning] = useState(false);
   const [cheatingWarningType, setCheatingWarningType] = useState(''); // 'tab' or 'copy'
   const [cheatingCount, setCheatingCount] = useState(0);
@@ -121,7 +122,7 @@ const MCQTest = () => {
     }
   }, [currentQuestion, questions.length]);
 
-  // Timer effect - 30 seconds per question
+  // Timer effect - 120 seconds (2 minutes) per question
   useEffect(() => {
     if (!quizStarted || quizCompleted || !questions.length || showTimeUpMessage) return;
 
@@ -214,30 +215,10 @@ const MCQTest = () => {
       e.preventDefault();
     };
 
-    // Detect keyboard shortcuts for tab switching (Ctrl+Tab, Alt+Tab, Cmd+Tab)
+    // Detect keyboard shortcuts for tab switching (Alt+Tab, Ctrl+Tab, Cmd+Tab)
     const handleKeyDown = (e) => {
-      // Ctrl+Tab or Cmd+Tab (duplicate check removed - handled below)
-      // Left this comment here to avoid confusion
-
-      // Alt+Tab and Cmd+Option+Right/Left (Mac app switcher)
-      if ((e.altKey || (e.metaKey && e.key === 'Tab')) && e.key === 'Tab') {
-        e.preventDefault();
-        setShowCheatingWarning(true);
-        setCheatingWarningType('tab');
-        setCheatingCount((prev) => {
-          const newCount = prev + 1;
-          if (newCount >= 3) {
-            setQuizCompleted(true);
-          }
-          return newCount;
-        });
-
-        setTimeout(() => setShowCheatingWarning(false), 3000);
-      }
-
-      // Additional check for any Tab key with modifier keys
-      if (e.key === 'Tab' && (e.altKey || e.ctrlKey || e.metaKey) && !showTimeUpMessage) {
-        // This catches Tab+Alt, Tab+Ctrl, Tab+Cmd combinations
+      // Alt+Tab, Ctrl+Tab, or Cmd+Tab - all tab switching shortcuts
+      if (e.key === 'Tab' && (e.altKey || e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         setShowCheatingWarning(true);
         setCheatingWarningType('tab');
@@ -297,7 +278,7 @@ const MCQTest = () => {
   // Start quiz
   const startQuiz = () => {
     setQuizStarted(true);
-    setTimeLeft(30);
+    setTimeLeft(120);
   };
 
   // Handle answer selection
@@ -338,7 +319,7 @@ const MCQTest = () => {
     setSelectedAnswer(null);
     setShowFeedback(false);
     setIsAnswerCorrect(null);
-    setTimeLeft(30);
+    setTimeLeft(120);
   }, []);
 
   // Finish quiz
@@ -355,7 +336,7 @@ const MCQTest = () => {
     setQuizStarted(false);
     setQuizCompleted(false);
     setSelectedSubject(null);
-    setTimeLeft(30);
+    setTimeLeft(120);
     setShowFeedback(false);
     setIsAnswerCorrect(null);
   };
@@ -420,7 +401,7 @@ const MCQTest = () => {
 
   // Pre-quiz screen
   if (!quizStarted) {
-    const subjectConfig = SUBJECTS[selectedSubject];
+    const subjectConfig = SUBJECTS[selectedSubject] || { name: subject, icon: '📚' };
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
@@ -432,7 +413,7 @@ const MCQTest = () => {
               <p className="text-2xl font-bold text-blue-600 mb-2">
                 {questions.length} Questions
               </p>
-              <p className="text-gray-600 text-sm">30 seconds per question</p>
+              <p className="text-gray-600 text-sm">2 minutes per question</p>
             </div>
             <div className="space-y-3 text-left mb-6">
               <div className="flex items-start gap-3">
@@ -467,6 +448,9 @@ const MCQTest = () => {
   // Quiz completed screen
   if (quizCompleted) {
     const percentage = Math.round((score / questions.length) * 100);
+    const passingScore = 4; // Need at least 4 out of 5 correct
+    const hasPassed = score >= passingScore;
+    
     const performanceMessage =
       percentage >= 80
         ? '🎉 Excellent Performance!'
@@ -474,18 +458,65 @@ const MCQTest = () => {
           ? '👍 Good Job!'
           : '💪 Keep Practicing!';
 
+    // If passed, notify parent and move to coding test
+    if (hasPassed && onSubmit) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+            <div className="text-5xl mb-4">✅</div>
+            <h2 className="text-3xl font-bold text-green-600 mb-2">You Passed!</h2>
+            <p className="text-gray-600 mb-6">Great job! You've qualified for the coding test.</p>
+
+            <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-8 mb-6">
+              <p className="text-5xl font-bold text-green-600 mb-2">
+                {score}/{questions.length}
+              </p>
+              <p className="text-2xl font-semibold text-gray-800 mb-2">{percentage}%</p>
+              <p className="text-lg text-gray-600">{performanceMessage}</p>
+            </div>
+
+            <div className="space-y-2 mb-6 text-left bg-gray-50 rounded-lg p-4">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Correct Answers:</span>
+                <span className="font-bold text-green-600">{score}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Wrong Answers:</span>
+                <span className="font-bold text-red-600">
+                  {questions.length - score}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Required Score:</span>
+                <span className="font-bold text-blue-600">{passingScore}/5</span>
+              </div>
+            </div>
+
+            <Button 
+              onClick={() => onSubmit({ score, totalQuestions: questions.length })} 
+              variant="primary" 
+              className="w-full"
+            >
+              Proceed to Coding Test
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // If failed, show failure message and allow retake
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Quiz Complete!</h2>
-          <p className="text-gray-600 mb-6">Here's how you performed:</p>
+          <div className="text-5xl mb-4">❌</div>
+          <h2 className="text-3xl font-bold text-red-600 mb-2">Quiz Not Passed</h2>
+          <p className="text-gray-600 mb-6">You need at least 4 correct answers to proceed.</p>
 
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-8 mb-6">
-            <p className="text-5xl font-bold text-blue-600 mb-2">
+          <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-8 mb-6">
+            <p className="text-5xl font-bold text-red-600 mb-2">
               {score}/{questions.length}
             </p>
             <p className="text-2xl font-semibold text-gray-800 mb-2">{percentage}%</p>
-            <p className="text-lg text-gray-600">{performanceMessage}</p>
           </div>
 
           <div className="space-y-2 mb-6 text-left bg-gray-50 rounded-lg p-4">
@@ -500,8 +531,12 @@ const MCQTest = () => {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Total Questions:</span>
-              <span className="font-bold text-gray-800">{questions.length}</span>
+              <span className="text-gray-600">Required Score:</span>
+              <span className="font-bold text-blue-600">{passingScore}/5</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Score Needed:</span>
+              <span className="font-bold text-orange-600">{Math.max(0, passingScore - score)} more</span>
             </div>
           </div>
 
@@ -524,7 +559,7 @@ const MCQTest = () => {
 
   const question = questions[currentQuestion];
   const isTimerWarning = timeLeft <= 10;
-  const subjectConfig = SUBJECTS[selectedSubject];
+  const subjectConfig = SUBJECTS[selectedSubject] || { name: subject, icon: '📚' };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
